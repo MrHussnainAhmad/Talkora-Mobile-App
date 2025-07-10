@@ -3,7 +3,7 @@
 
 const getBackendUrl = () => {
   // Production URL - always use this in production builds
-  const PRODUCTION_URL = 'https://talko-private-chat.up.railway.app';
+  const PRODUCTION_URL = 'https://talkora-private-chat.up.railway.app';
   
   // Development URLs
   const LOCAL_IP = '192.168.3.58'; // Your local IP - update this as needed
@@ -53,7 +53,7 @@ export const BackendConfig = {
   
   // Helper to check if using production backend
   isProduction: () => {
-    return BASE_URL.includes('talko-private-chat.up.railway.app');
+    return BASE_URL.includes('talkora-private-chat.up.railway.app');
   },
   
   // Update local IP if needed (for dynamic IP changes)

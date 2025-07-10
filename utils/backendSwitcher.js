@@ -46,7 +46,7 @@ export const BackendSwitcher = {
         return 'http://localhost:3000';
       
       case BackendSwitcher.BACKENDS.PRODUCTION:
-        return 'https://talko-private-chat.up.railway.app';
+        return 'https://talkora-private-chat.up.railway.app';
       
       case BackendSwitcher.BACKENDS.CUSTOM:
         const customUrl = await AsyncStorage.getItem('custom_backend_url');

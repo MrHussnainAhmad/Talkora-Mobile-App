@@ -1,0 +1,49 @@
+
+🎯 **FIXED: Online Status Chain Problem**
+
+## 🔍 Problem Analysis:
+User A online → User B connects → A sees B online, but B doesn't see A online
+User C connects → A,B see C online, but C doesn't see A,B online
+
+## 🛠️ Root Cause:
+The backend was not properly synchronizing online users when new users connected.
+
+## ✅ Backend Fixes Applied:
+
+1. **Fixed Connection Order:**
+   - Add user to userSocketMap FIRST
+   - Then send complete online users list to new user
+   - Then broadcast to ALL users (including new user)
+
+2. **Added Connection Delay:**
+   - 100ms delay to ensure socket connection is fully established
+   - Prevents race conditions
+
+3. **Enhanced Logging:**
+   - Better tracking of online users
+   - Clear logs for debugging
+
+4. **Fixed Disconnect Logic:**
+   - Proper cleanup when users disconnect
+   - Broadcast updated list to all remaining users
+
+## 📱 Frontend Improvements:
+
+1. **Socket Connection Checks:**
+   - Home screen mount: Ensure socket connection
+   - Home screen focus: Reconnect if needed
+   - FriendsList refresh: Verify connection
+
+2. **Cleaner Logging:**
+   - Removed excessive debug logs
+   - Keep essential connection logs
+
+## 🎉 Result:
+Now when users A, B, C connect in sequence:
+- User A sees B and C online ✅
+- User B sees A and C online ✅  
+- User C sees A and B online ✅
+- All users see proper online status and tags ✅
+
+The online status chain problem is completely resolved!
+

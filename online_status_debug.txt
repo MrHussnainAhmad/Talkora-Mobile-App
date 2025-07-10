@@ -1,0 +1,22 @@
+
+🔍 Online Status Issue Analysis:
+
+The online status problem is likely caused by:
+1. Socket connection interruption during navigation
+2. FriendsList component not properly receiving online users updates
+3. Potential race condition in socket connection establishment
+
+✅ Fixes Applied:
+1. Added socket connection check in home screen mount
+2. Added socket connection check in home screen focus
+3. Enhanced debugging in FriendsList component
+4. Fixed useEffect dependencies in FriendsList
+
+🔧 Next Steps:
+1. Test the app to see console logs
+2. Check if socket connection is established
+3. Verify online users are being received
+4. Check if FriendsList is properly updating online status
+
+The debugging logs will help identify the exact issue.
+

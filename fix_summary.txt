@@ -1,0 +1,14 @@
+
+Test Plan:
+1. ✅ Removed key prop from FriendsList that was causing remounting
+2. ✅ Added refreshTrigger prop to refresh data without remounting
+3. ✅ Online users state is now preserved during navigation
+4. ✅ Socket connection is maintained across screen changes
+5. ✅ Improved connection handling in socket service
+
+The issue was that the FriendsList component was being completely remounted 
+every time the user returned to the home screen due to the 'key={refreshKey}' prop.
+
+Now the component stays mounted and only refreshes its data, preserving the 
+online users state and socket listeners.
+

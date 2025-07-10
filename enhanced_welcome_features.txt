@@ -1,0 +1,34 @@
+
+🎉 Enhanced Welcome Screen Features:
+
+✅ Dynamic User Experience:
+- NEW USERS: Show 'Proceed' button with full animations
+- RETURNING USERS: Auto-redirect after 3 seconds countdown
+- AsyncStorage tracks first-time vs returning users
+
+✅ Beautiful Animations:
+- Logo scale animation with spring effect
+- Title pulse animation (continuous gentle pulse)
+- Button fade-in animation for new users
+- Smooth slide-up and fade-in transitions
+
+✅ Enhanced UI:
+- Transparent logo background (no more blue background)
+- Dynamic footer text ('Secure • Private • Reliable' vs 'Welcome back!')
+- Countdown timer with loading indicator
+- Faster animations for returning users
+
+✅ Smart Logic:
+- First time: AsyncStorage key 'hasOpenedBefore' is set
+- Returning users: 3-second countdown with auto-redirect
+- Same authentication logic: logged in → home, not logged in → login
+- 7-day token privacy still intact
+
+✅ Animation Details:
+- Logo: Spring animation (scale 0.8 → 1.0)
+- Title: Continuous pulse (scale 1.0 → 1.05 → 1.0)
+- Button: Fade-in after other animations complete
+- Content: Slide-up + fade-in entrance
+
+The welcome screen now provides a personalized experience for both new and returning users!
+

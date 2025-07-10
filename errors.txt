@@ -1,0 +1,3 @@
+Logs for your project will appear below. Press Ctrl+C to exit.
+Android Bundling failed 22346ms node_modules/expo-router/entry.js (1448 modules)
+Unable to resolve "../services/notification" from "context/AuthContext.js"

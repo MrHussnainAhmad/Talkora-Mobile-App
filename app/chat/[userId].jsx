@@ -76,11 +76,14 @@ export default function ChatScreen() {
     }
     
     // Execute all promises in parallel for faster loading
-    Promise.allSettled(promises).then(() => {
+    Promise.allSettled(promises).then(async () => {
       // Mark messages as read after data is loaded
-      ApiService.markMessagesAsRead(userId).catch(error => {
+      try {
+        await ApiService.markMessagesAsRead(userId);
+        console.log('📖 Messages marked as read successfully for:', userId);
+      } catch (error) {
         console.log('Failed to mark messages as read:', error);
-      });
+      }
     });
     
     // Set current chat user in notification service
@@ -114,9 +117,12 @@ export default function ChatScreen() {
         // since the user has this chat open
         if (newMessage.senderId === userId && newMessage.receiverId === user._id) {
           console.log('📖 Auto-marking message as read since chat is open');
-          ApiService.markMessagesAsRead(userId).catch(error => {
+          try {
+            await ApiService.markMessagesAsRead(userId);
+            console.log('📖 Auto-marked message as read successfully');
+          } catch (error) {
             console.log('Failed to auto-mark message as read:', error);
-          });
+          }
         }
       } else {
         console.log('❌ Message not for current conversation, ignoring');

@@ -21,6 +21,23 @@ const styles = StyleSheet.create({
   inputWrapper: {
     backgroundColor: '#fff',
   },
+
+  // Dark Mode Styles
+  darkContainer: {
+    backgroundColor: '#121212',
+  },
+  darkChatContent: {
+    backgroundColor: '#121212',
+  },
+  darkLoadingContainer: {
+    backgroundColor: '#121212',
+  },
+  darkLoadingText: {
+    color: '#FFFFFF',
+  },
+  darkInputWrapper: {
+    backgroundColor: '#1E1E1E',
+  },
 });
 
 export default styles;

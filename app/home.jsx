@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { View, Text, TouchableOpacity, Modal, TextInput, Animated } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import styles from "../assets/styles/home.style";
@@ -22,6 +22,7 @@ export default function Home() {
   const [fabAnimation] = useState(new Animated.Value(0));
   const [overlayAnimation] = useState(new Animated.Value(0));
   const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
+  const [chatListSearchQuery, setChatListSearchQuery] = useState("");
   
   useEffect(() => {
     if (!user && !loading) {
@@ -207,9 +208,45 @@ const handleSettingsPress = useCallback(() => {
           </TouchableOpacity>
         </View>
 
+        {/* SEARCH BAR */}
+        <View style={[styles.searchContainer, theme === 'dark' && styles.darkSearchContainer]}>
+          <View style={[styles.searchBar, theme === 'dark' && styles.darkSearchBar]}>
+            <Ionicons 
+              name="search" 
+              size={20} 
+              color={theme === 'dark' ? '#9BA1A6' : '#666'} 
+              style={styles.searchIcon}
+            />
+            <TextInput
+              style={[styles.searchInput, theme === 'dark' && styles.darkSearchInput]}
+              placeholder="Search contacts..."
+              placeholderTextColor={theme === 'dark' ? '#9BA1A6' : '#999'}
+              value={chatListSearchQuery}
+              onChangeText={setChatListSearchQuery}
+              returnKeyType="search"
+            />
+            {chatListSearchQuery.length > 0 && (
+              <TouchableOpacity 
+                onPress={() => setChatListSearchQuery('')}
+                style={styles.clearButton}
+              >
+                <Ionicons 
+                  name="close-circle" 
+                  size={18} 
+                  color={theme === 'dark' ? '#9BA1A6' : '#666'} 
+                />
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+
         {/* MAIN CONTAINER */}
         <View style={styles.mainContainer}>
-          <FriendsList onFriendSelect={handleFriendSelect} refreshTrigger={refreshKey} />
+          <FriendsList 
+            onFriendSelect={handleFriendSelect} 
+            refreshTrigger={refreshKey}
+            searchQuery={chatListSearchQuery}
+          />
           
           {showOverlay && (
             <Animated.View

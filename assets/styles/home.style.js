@@ -36,6 +36,38 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 0,
   },
+  // Search Bar Styles
+  searchContainer: {
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    fontFamily: FONTS.POPPINS_REGULAR,
+    color: '#111827',
+    paddingVertical: 0,
+  },
+  clearButton: {
+    marginLeft: 8,
+    padding: 4,
+  },
   mainContainer: {
     flex: 1,
     backgroundColor: '#FFFFFF',
@@ -220,6 +252,18 @@ const styles = StyleSheet.create({
     backgroundColor: '#2C2C2C',
   },
   darkModalOptionText: {
+    color: '#FFFFFF',
+  },
+  // Dark Search Bar Styles
+  darkSearchContainer: {
+    backgroundColor: '#1E1E1E',
+    borderBottomColor: '#333333',
+  },
+  darkSearchBar: {
+    backgroundColor: '#2C2C2C',
+    borderColor: '#444444',
+  },
+  darkSearchInput: {
     color: '#FFFFFF',
   },
 });

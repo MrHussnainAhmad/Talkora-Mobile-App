@@ -3,11 +3,13 @@ import { View, Text, TouchableOpacity, FlatList, Image, ActivityIndicator } from
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { useFocusEffect } from 'expo-router';
 import ApiService from '../services/api';
 import SocketService from '../services/socket';
+import ChatContextMenu from './ChatContextMenu';
 import styles from '../assets/styles/friendsList.style';
 
-const FriendsList = ({ onFriendSelect, refreshTrigger }) => {
+const FriendsList = ({ onFriendSelect, refreshTrigger, searchQuery = '' }) => {
   const { user, loading: authLoading } = useAuth();
   const { theme } = useTheme();
   const [friends, setFriends] = useState([]);
@@ -16,6 +18,27 @@ const FriendsList = ({ onFriendSelect, refreshTrigger }) => {
   const [lastMessages, setLastMessages] = useState({});
   const [unreadCounts, setUnreadCounts] = useState({}); // Track unread counts per friend
   const [refreshing, setRefreshing] = useState(false); // Track pull-to-refresh state
+  
+  // Context menu state
+  const [contextMenuVisible, setContextMenuVisible] = useState(false);
+  const [contextMenuFriend, setContextMenuFriend] = useState(null);
+  const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
+  const [pinnedFriends, setPinnedFriends] = useState(new Set());
+  const [mutedFriends, setMutedFriends] = useState(new Set());
+  const [blockedFriends, setBlockedFriends] = useState(new Set());
+  
+  // Filter friends based on search query
+  const filteredFriends = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return friends;
+    }
+    
+    const query = searchQuery.toLowerCase().trim();
+    return friends.filter(friend => 
+      (friend.fullname && friend.fullname.toLowerCase().includes(query)) ||
+      (friend.username && friend.username.toLowerCase().includes(query))
+    );
+  }, [friends, searchQuery]);
 
   // Function to clear unread messages for a specific friend
   const clearUnreadMessages = useCallback((friendId) => {
@@ -116,6 +139,21 @@ const FriendsList = ({ onFriendSelect, refreshTrigger }) => {
     return unsubscribeFriendRequest;
   }, [user?._id, fetchFriends]);
 
+  // Refresh when screen comes into focus (user returns from chat)
+  useFocusEffect(
+    useCallback(() => {
+      if (user?._id) {
+        console.log('🔄 FriendsList focused, refreshing to update unread counts');
+        // Small delay to ensure any pending API calls from chat screen complete
+        const timeoutId = setTimeout(() => {
+          fetchFriends(false); // Refresh without showing loading indicator
+        }, 100);
+        
+        return () => clearTimeout(timeoutId);
+      }
+    }, [user?._id, fetchFriends])
+  );
+
   // Set up real-time online users listener
   useEffect(() => {
     const unsubscribe = SocketService.onOnlineUsersUpdate((users) => {
@@ -170,10 +208,15 @@ const FriendsList = ({ onFriendSelect, refreshTrigger }) => {
     const unsubscribeMessagesRead = SocketService.onMessagesRead((data) => {
       console.log('📖 Messages read event received in FriendsList:', data);
       if (data.userId) {
-        setUnreadCounts(prev => ({
-          ...prev,
-          [data.userId]: 0
-        }));
+        console.log('📖 Clearing unread count for userId:', data.userId);
+        setUnreadCounts(prev => {
+          const newCounts = {
+            ...prev,
+            [data.userId]: 0
+          };
+          console.log('📖 Updated unread counts:', newCounts);
+          return newCounts;
+        });
       }
     });
 
@@ -228,9 +271,120 @@ const FriendsList = ({ onFriendSelect, refreshTrigger }) => {
     return `${Math.floor(diffInMinutes / 1440)}d`;
   }, []);
 
+  // Context menu handlers
+  const handleLongPress = useCallback((friend, event) => {
+    const { pageX, pageY } = event.nativeEvent;
+    setContextMenuFriend(friend);
+    setContextMenuPosition({ x: pageX, y: pageY });
+    setContextMenuVisible(true);
+  }, []);
+
+  const handleContextMenuClose = useCallback(() => {
+    setContextMenuVisible(false);
+    setContextMenuFriend(null);
+  }, []);
+
+  const handlePinChat = useCallback(async (friend) => {
+    try {
+      const isPinned = pinnedFriends.has(friend._id);
+      if (isPinned) {
+        await ApiService.unpinChat(friend._id);
+        setPinnedFriends(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(friend._id);
+          return newSet;
+        });
+      } else {
+        await ApiService.pinChat(friend._id);
+        setPinnedFriends(prev => new Set(prev).add(friend._id));
+      }
+      handleContextMenuClose();
+    } catch (error) {
+      console.error('Error pinning/unpinning chat:', error);
+    }
+  }, [pinnedFriends, handleContextMenuClose]);
+
+  const handleMuteChat = useCallback(async (friend) => {
+    try {
+      const isMuted = mutedFriends.has(friend._id);
+      if (isMuted) {
+        await ApiService.unmuteChat(friend._id);
+        setMutedFriends(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(friend._id);
+          return newSet;
+        });
+      } else {
+        // Mute for 8 hours by default
+        await ApiService.muteChat(friend._id, 8 * 60 * 60 * 1000);
+        setMutedFriends(prev => new Set(prev).add(friend._id));
+      }
+      handleContextMenuClose();
+    } catch (error) {
+      console.error('Error muting/unmuting chat:', error);
+    }
+  }, [mutedFriends, handleContextMenuClose]);
+
+  const handleBlockUser = useCallback(async (friend) => {
+    try {
+      const isBlocked = blockedFriends.has(friend._id);
+      if (isBlocked) {
+        await ApiService.unblockUser(friend._id);
+        setBlockedFriends(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(friend._id);
+          return newSet;
+        });
+      } else {
+        await ApiService.blockUser(friend._id);
+        setBlockedFriends(prev => new Set(prev).add(friend._id));
+      }
+      handleContextMenuClose();
+    } catch (error) {
+      console.error('Error blocking/unblocking user:', error);
+    }
+  }, [blockedFriends, handleContextMenuClose]);
+
+  const handleDeleteFriend = useCallback(async (friend) => {
+    try {
+      await ApiService.deleteFriend(friend._id);
+      // Remove from friends list
+      setFriends(prev => prev.filter(f => f._id !== friend._id));
+      // Clean up related state
+      setLastMessages(prev => {
+        const newMessages = { ...prev };
+        delete newMessages[friend._id];
+        return newMessages;
+      });
+      setUnreadCounts(prev => {
+        const newCounts = { ...prev };
+        delete newCounts[friend._id];
+        return newCounts;
+      });
+      setPinnedFriends(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(friend._id);
+        return newSet;
+      });
+      setMutedFriends(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(friend._id);
+        return newSet;
+      });
+      setBlockedFriends(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(friend._id);
+        return newSet;
+      });
+      handleContextMenuClose();
+    } catch (error) {
+      console.error('Error deleting friend:', error);
+    }
+  }, [handleContextMenuClose]);
+
   // Sort friends by last message time (most recent first) like WhatsApp
-  const sortedFriends = useMemo(() => {
-    return [...friends].sort((a, b) => {
+  const sortedFilteredFriends = useMemo(() => {
+    return [...filteredFriends].sort((a, b) => {
       const messageA = lastMessages[a._id];
       const messageB = lastMessages[b._id];
       
@@ -248,7 +402,7 @@ const FriendsList = ({ onFriendSelect, refreshTrigger }) => {
       const nameB = b.fullname || b.username || '';
       return nameA.localeCompare(nameB);
     });
-  }, [friends, lastMessages]);
+  }, [filteredFriends, lastMessages]);
 
   const renderFriend = useCallback(({ item: friend }) => {
     const isOnline = onlineUsers.includes(friend._id);
@@ -258,8 +412,9 @@ const FriendsList = ({ onFriendSelect, refreshTrigger }) => {
     
     return (
       <TouchableOpacity
-        style={styles.friendItem}
+        style={[styles.friendItem, theme === 'dark' && styles.darkFriendItem]}
         onPress={() => handleFriendSelect(friend)}
+        onLongPress={(event) => handleLongPress(friend, event)}
       >
         <View style={styles.avatarContainer}>
           <Image
@@ -268,20 +423,25 @@ const FriendsList = ({ onFriendSelect, refreshTrigger }) => {
             }}
             style={styles.avatar}
           />
-          {isOnline && <View style={styles.onlineIndicator} />}
+          {isOnline && <View style={[styles.onlineIndicator, theme === 'dark' && styles.darkOnlineIndicator]} />}
         </View>
         
         <View style={styles.friendInfo}>
-          <Text style={styles.friendName}>
+          <Text style={[styles.friendName, theme === 'dark' && styles.darkFriendName]}>
             {friend.fullname || friend.username || 'Unknown User'}
           </Text>
-          <Text style={[styles.lastMessage, hasUnread && styles.unreadMessage]} numberOfLines={1}>
+          <Text style={[
+            styles.lastMessage, 
+            theme === 'dark' && styles.darkLastMessage,
+            hasUnread && styles.unreadMessage,
+            hasUnread && theme === 'dark' && styles.darkUnreadMessage
+          ]} numberOfLines={1}>
             {formatLastMessage(lastMessage, friend._id)}
           </Text>
         </View>
         
         <View style={styles.messageTime}>
-          <Text style={styles.timeText}>
+          <Text style={[styles.timeText, theme === 'dark' && styles.darkTimeText]}>
             {formatTime(lastMessage?.createdAt)}
           </Text>
           {hasUnread ? (
@@ -294,7 +454,7 @@ const FriendsList = ({ onFriendSelect, refreshTrigger }) => {
         </View>
       </TouchableOpacity>
     );
-  }, [onlineUsers, lastMessages, unreadCounts, formatLastMessage, formatTime, handleFriendSelect]);
+  }, [onlineUsers, lastMessages, unreadCounts, formatLastMessage, formatTime, handleFriendSelect, theme]);
 
   // Show loading while authentication is in progress
   if (authLoading || !user) {
@@ -325,10 +485,20 @@ const FriendsList = ({ onFriendSelect, refreshTrigger }) => {
     );
   }
 
+  if (filteredFriends.length === 0 && searchQuery.trim()) {
+    return (
+      <View style={[styles.emptyContainer, theme === 'dark' && styles.darkEmptyContainer]}>
+        <Ionicons name="search-outline" size={64} color={theme === 'dark' ? '#666' : '#ccc'} />
+        <Text style={[styles.emptyText, theme === 'dark' && styles.darkEmptyText]}>No contacts found</Text>
+        <Text style={[styles.emptySubtext, theme === 'dark' && styles.darkEmptySubtext]}>Try searching with a different name</Text>
+      </View>
+    );
+  }
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, theme === 'dark' && styles.darkContainer]}>
       <FlatList
-        data={sortedFriends}
+        data={sortedFilteredFriends}
         renderItem={renderFriend}
         keyExtractor={(item) => item._id}
         showsVerticalScrollIndicator={false}
@@ -344,6 +514,21 @@ const FriendsList = ({ onFriendSelect, refreshTrigger }) => {
         })}
         refreshing={refreshing}
         onRefresh={() => fetchFriends(true)}
+      />
+      
+      {/* Context Menu */}
+      <ChatContextMenu
+        visible={contextMenuVisible}
+        position={contextMenuPosition}
+        friend={contextMenuFriend}
+        onClose={handleContextMenuClose}
+        onPin={handlePinChat}
+        onMute={handleMuteChat}
+        onBlock={handleBlockUser}
+        onDelete={handleDeleteFriend}
+        isPinned={contextMenuFriend ? pinnedFriends.has(contextMenuFriend._id) : false}
+        isMuted={contextMenuFriend ? mutedFriends.has(contextMenuFriend._id) : false}
+        isBlocked={contextMenuFriend ? blockedFriends.has(contextMenuFriend._id) : false}
       />
     </View>
   );

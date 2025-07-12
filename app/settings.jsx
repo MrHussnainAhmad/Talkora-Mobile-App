@@ -21,11 +21,20 @@ export default function SettingsScreen() {
   const { theme, toggleTheme } = useTheme();
   const { user } = useAuth();
   const [blockingManagerVisible, setBlockingManagerVisible] = React.useState(false);
+  const [inChatSoundEnabled, setInChatSoundEnabled] = React.useState(true);
+
+  // Load in-chat sound setting on mount
+  React.useEffect(() => {
+    const loadInChatSoundSetting = async () => {
+      const enabled = notificationService.getInChatSoundEnabled();
+      setInChatSoundEnabled(enabled);
+    };
+    loadInChatSoundSetting();
+  }, []);
 
   const handleBack = () => {
     router.back();
   };
-
   const handleAbout = () => {
     Alert.alert(
       'About Talkora',
@@ -73,6 +82,28 @@ export default function SettingsScreen() {
         [{ text: 'OK' }]
       );
     }
+  };
+
+  const handleTestConfirmSound = async () => {
+    try {
+      await notificationService.handleMessageSent();
+      Alert.alert(
+        'Test Confirm Sound',
+        'The confirm sound has been played. This is the sound you hear when sending messages.',
+        [{ text: 'OK' }]
+      );
+    } catch (error) {
+      Alert.alert(
+        'Error',
+        'Failed to play confirm sound.',
+        [{ text: 'OK' }]
+      );
+    }
+  };
+
+  const handleInChatSoundToggle = async (enabled) => {
+    setInChatSoundEnabled(enabled);
+    await notificationService.setInChatSoundEnabled(enabled);
   };
 
   const handleBackendSwitch = () => {
@@ -139,6 +170,32 @@ export default function SettingsScreen() {
               onValueChange={toggleTheme}
               trackColor={{ false: '#E0E0E0', true: '#4CAF50' }}
               thumbColor={theme === 'dark' ? '#fff' : '#f4f3f4'}
+            />
+          </View>
+        </View>
+
+        {/* Notifications Section */}
+        <View style={[styles.section, theme === 'dark' && styles.darkSection]}>
+          <Text style={[styles.sectionTitle, theme === 'dark' && styles.darkSectionTitle]}>
+            Notifications
+          </Text>
+          
+          <View style={[styles.settingItem, theme === 'dark' && styles.darkSettingItem]}>
+            <View style={styles.settingLeft}>
+              <Ionicons 
+                name="musical-notes-outline" 
+                size={24} 
+                color={theme === 'dark' ? '#9BA1A6' : '#666'} 
+              />
+              <Text style={[styles.settingText, theme === 'dark' && styles.darkSettingText]}>
+                In-Chat Sound
+              </Text>
+            </View>
+            <Switch
+              value={inChatSoundEnabled}
+              onValueChange={handleInChatSoundToggle}
+              trackColor={{ false: '#E0E0E0', true: '#4CAF50' }}
+              thumbColor={inChatSoundEnabled ? '#fff' : '#f4f3f4'}
             />
           </View>
         </View>
@@ -321,6 +378,30 @@ export default function SettingsScreen() {
                 />
                 <Text style={[styles.settingText, theme === 'dark' && styles.darkSettingText]}>
                   Test Notification
+                </Text>
+              </View>
+              <Ionicons 
+                name="chevron-forward" 
+                size={20} 
+                color={theme === 'dark' ? '#9BA1A6' : '#999'} 
+              />
+            </TouchableOpacity>
+          )}
+          
+          {/* Test Confirm Sound - Development Only */}
+          {__DEV__ && (
+            <TouchableOpacity 
+              style={[styles.settingItem, styles.settingItemButton, theme === 'dark' && styles.darkSettingItem]}
+              onPress={handleTestConfirmSound}
+            >
+              <View style={styles.settingLeft}>
+                <Ionicons 
+                  name="musical-notes-outline" 
+                  size={24} 
+                  color={theme === 'dark' ? '#9BA1A6' : '#666'} 
+                />
+                <Text style={[styles.settingText, theme === 'dark' && styles.darkSettingText]}>
+                  Test Confirm Sound
                 </Text>
               </View>
               <Ionicons 

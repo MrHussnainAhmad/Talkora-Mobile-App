@@ -8,7 +8,7 @@ import { AuthProvider } from "../context/AuthContext";
 import { ThemeProvider } from "../context/ThemeContext";
 import { useEffect, useState } from "react";
 import { loadFonts } from "../utils/fonts";
-import NotificationService from '../services/fcmNotificationService';
+import NotificationService from '../services/simpleNotificationService';
 
 export default function RootLayout() {
   const [fontsLoaded, setFontsLoaded] = useState(false);

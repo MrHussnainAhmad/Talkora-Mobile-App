@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import ApiService from '../services/api';
 import SocketService from '../services/socket';
-import NotificationService from '../services/fcmNotificationService';
+import NotificationService from '../services/simpleNotificationService';
 import { router } from 'expo-router';
 
 const AuthContext = createContext();

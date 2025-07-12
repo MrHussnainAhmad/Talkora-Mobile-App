@@ -125,6 +125,28 @@ const styles = StyleSheet.create({
   },
   
   // Dark Mode Styles
+  darkContainer: {
+    backgroundColor: '#121212',
+  },
+  darkFriendItem: {
+    backgroundColor: '#1E1E1E',
+    borderBottomColor: '#333333',
+  },
+  darkFriendName: {
+    color: '#FFFFFF',
+  },
+  darkLastMessage: {
+    color: '#9BA1A6',
+  },
+  darkUnreadMessage: {
+    color: '#FFFFFF',
+  },
+  darkTimeText: {
+    color: '#666666',
+  },
+  darkOnlineIndicator: {
+    borderColor: '#1E1E1E',
+  },
   darkLoadingContainer: {
     backgroundColor: '#121212',
   },

@@ -235,9 +235,36 @@ class ApiService {
 
   // Mark messages as read
   async markMessagesAsRead(userId) {
-    return this.request(`/messages/read/${userId}`, {
-      method: "PUT",
-    });
+    try {
+      const response = await this.request(`/messages/read/${userId}`, {
+        method: "PUT",
+      });
+      
+      // Import SocketService dynamically to avoid circular dependency
+      const SocketService = (await import('./socket')).default;
+      
+      // Emit socket event to notify other parts of the app
+      if (SocketService.getConnectionStatus()) {
+        console.log('📖 Emitting messagesRead event for userId:', userId);
+        // Emit a local event to immediately update UI
+        SocketService.socket?.emit('markAsRead', { userId });
+        
+        // Also manually trigger the messagesRead listeners locally
+        // This ensures immediate UI update without waiting for server response
+        setTimeout(() => {
+          if (SocketService.messagesReadListeners) {
+            SocketService.messagesReadListeners.forEach(listener => {
+              listener({ userId });
+            });
+          }
+        }, 50);
+      }
+      
+      return response;
+    } catch (error) {
+      console.error('Failed to mark messages as read:', error);
+      throw error;
+    }
   }
 
   // Get unread message count from a specific user
@@ -290,6 +317,36 @@ class ApiService {
     return this.request(`/auth/unblock/${userId}`, {
       method: "POST",
     });
+  }
+
+  // Chat management functionality
+  async pinChat(userId) {
+    return this.request(`/chats/pin/${userId}`, {
+      method: "POST",
+    });
+  }
+
+  async unpinChat(userId) {
+    return this.request(`/chats/unpin/${userId}`, {
+      method: "POST",
+    });
+  }
+
+  async muteChat(userId, duration = null) {
+    return this.request(`/chats/mute/${userId}`, {
+      method: "POST",
+      body: JSON.stringify({ duration }), // duration in hours, null for indefinite
+    });
+  }
+
+  async unmuteChat(userId) {
+    return this.request(`/chats/unmute/${userId}`, {
+      method: "POST",
+    });
+  }
+
+  async getChatSettings(userId) {
+    return this.request(`/chats/settings/${userId}`);
   }
 
   async getBlockedUsers() {

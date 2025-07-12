@@ -94,7 +94,7 @@ export default function ChatScreen() {
   // Set up real-time message listener
   useEffect(() => {
     console.log('🔗 Setting up message listener for userId:', userId);
-    const unsubscribe = SocketService.onNewMessage((newMessage) => {
+    const unsubscribe = SocketService.onNewMessage(async (newMessage) => {
       console.log('📥 Received message in chat screen:', newMessage);
       console.log('📥 Current userId:', userId, 'Message senderId:', newMessage.senderId, 'receiverId:', newMessage.receiverId);
       

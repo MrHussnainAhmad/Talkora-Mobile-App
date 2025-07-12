@@ -123,6 +123,23 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     opacity: 0.8,
   },
+  
+  // Dark Mode Styles
+  darkLoadingContainer: {
+    backgroundColor: '#121212',
+  },
+  darkLoadingText: {
+    color: '#FFFFFF',
+  },
+  darkEmptyContainer: {
+    backgroundColor: '#121212',
+  },
+  darkEmptyText: {
+    color: '#FFFFFF',
+  },
+  darkEmptySubtext: {
+    color: '#9BA1A6',
+  },
 });
 
 export default styles;

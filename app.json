@@ -1,9 +1,9 @@
 {
   "expo": {
     "name": "Talkora",
-    "slug": "Talkora",
+    "slug": "talkora",
     "version": "1.0.0",
-    "owner": "Talkora-app",
+    "owner": "hussnainahmad",
     "projectId": "Talkora-messaging-app",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -21,8 +21,11 @@
       "edgeToEdgeEnabled": true,
       "permissions": [
         "android.permission.RECEIVE_BOOT_COMPLETED",
-        "android.permission.VIBRATE"
-      ]
+        "android.permission.VIBRATE",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
+      ],
+      "package": "com.hussnainahmad.talkora"
     },
     "web": {
       "bundler": "metro",
@@ -44,6 +47,12 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "9cb89a94-c23b-42d8-8abb-0896bb5ea695"
+      }
     }
   }
 }

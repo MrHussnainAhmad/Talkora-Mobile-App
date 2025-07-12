@@ -6,8 +6,9 @@ const BACKEND_PREFERENCE_KEY = 'backend_preference';
 export const BackendSwitcher = {
   // Backend options
   BACKENDS: {
-    LOCAL_IP: 'local_ip',
+    AUTO: 'auto',
     LOCALHOST: 'localhost',
+    LOCAL_IP: 'local_ip',
     PRODUCTION: 'production',
     CUSTOM: 'custom'
   },
@@ -16,10 +17,10 @@ export const BackendSwitcher = {
   getPreference: async () => {
     try {
       const preference = await AsyncStorage.getItem(BACKEND_PREFERENCE_KEY);
-      return preference || BackendSwitcher.BACKENDS.LOCAL_IP;
+      return preference || BackendSwitcher.BACKENDS.AUTO;
     } catch (error) {
       console.error('Error getting backend preference:', error);
-      return BackendSwitcher.BACKENDS.LOCAL_IP;
+      return BackendSwitcher.BACKENDS.AUTO;
     }
   },
   
@@ -71,22 +72,61 @@ export const BackendSwitcher = {
   // Show backend switcher dialog
   showSwitcher: () => {
     const options = [
-      { text: 'Local IP (192.168.3.58)', value: BackendSwitcher.BACKENDS.LOCAL_IP },
-      { text: 'Localhost', value: BackendSwitcher.BACKENDS.LOCALHOST },
-      { text: 'Production', value: BackendSwitcher.BACKENDS.PRODUCTION },
-      { text: 'Custom', value: BackendSwitcher.BACKENDS.CUSTOM },
+      { text: '✨ Auto-Detect (Recommended)', value: BackendSwitcher.BACKENDS.AUTO },
+      { text: '💻 Localhost (127.0.0.1:3000)', value: BackendSwitcher.BACKENDS.LOCALHOST },
+      { text: '🏠 Local IP (192.168.3.58:3000)', value: BackendSwitcher.BACKENDS.LOCAL_IP },
+      { text: '🌐 Production (Railway)', value: BackendSwitcher.BACKENDS.PRODUCTION },
+      { text: '🔧 Custom URL', value: BackendSwitcher.BACKENDS.CUSTOM },
       { text: 'Cancel', style: 'cancel' }
     ];
     
     Alert.alert(
-      'Select Backend',
-      'Choose which backend to connect to:',
+      'Backend Server',
+      'Choose which backend to connect to:\n\nAuto-Detect will try localhost first, then local IP, then production.',
       options.map(option => ({
         text: option.text,
         style: option.style,
         onPress: option.value ? () => BackendSwitcher.setPreference(option.value) : undefined
       }))
     );
+  },
+  
+  // Test current backend connectivity
+  async testCurrentBackend() {
+    const preference = await this.getPreference();
+    const url = await this.getBackendUrl();
+    
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      
+      const response = await fetch(`${url}/api/auth/check`, {
+        method: 'GET',
+        signal: controller.signal,
+        headers: { 'Content-Type': 'application/json' },
+      });
+      
+      clearTimeout(timeoutId);
+      
+      Alert.alert(
+        'Backend Status',
+        `✅ Connected to ${preference.toUpperCase()}\n\nURL: ${url}\nStatus: ${response.status}`,
+        [{ text: 'OK' }]
+      );
+      
+      return true;
+    } catch (error) {
+      Alert.alert(
+        'Backend Status',
+        `❌ Cannot connect to ${preference.toUpperCase()}\n\nURL: ${url}\nError: ${error.message}`,
+        [
+          { text: 'Try Auto-Detect', onPress: () => this.setPreference(this.BACKENDS.AUTO) },
+          { text: 'OK' }
+        ]
+      );
+      
+      return false;
+    }
   }
 };
 

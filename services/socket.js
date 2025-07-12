@@ -15,6 +15,10 @@ class SocketService {
     this.messagesReadListeners = new Set();
     this.typingListeners = new Set();
     this.friendRequestListeners = new Set();
+    this.blockingListeners = new Set();
+    this.notificationListeners = new Set();
+    this.contactListListeners = new Set();
+    this.accountActivityListeners = new Set();
     this.reconnectTimeout = null;
   }
 
@@ -122,6 +126,18 @@ class SocketService {
       this.friendRequestListeners.forEach(listener => listener({ type: 'rejected', ...data }));
     });
 
+    // Listen for friend updates (when friends are added/removed)
+    this.socket.on('friendListUpdated', (data) => {
+      console.log('👥 Friend list updated:', data);
+      this.friendRequestListeners.forEach(listener => listener({ type: 'listUpdated', ...data }));
+    });
+
+    // Listen for profile updates from friends
+    this.socket.on('profileUpdated', (data) => {
+      console.log('👤 Profile updated:', data);
+      this.friendRequestListeners.forEach(listener => listener({ type: 'profileUpdated', ...data }));
+    });
+
     this.socket.on('connect_error', (error) => {
       console.error('Socket connection error:', error);
       
@@ -145,6 +161,9 @@ class SocketService {
     this.socket.on('reconnect_error', (error) => {
       console.error('Socket reconnection error:', error);
     });
+
+    // Enhanced real-time events
+    this.setupEnhancedEventListeners();
   }
 
   disconnect() {
@@ -283,6 +302,157 @@ class SocketService {
     };
     
     connectWithDelay();
+  }
+
+  // Setup enhanced event listeners for new features
+  setupEnhancedEventListeners() {
+    if (!this.socket) return;
+
+    // Blocking events
+    this.socket.on('youWereBlocked', (data) => {
+      console.log('🚫 You were blocked by user:', data);
+      this.blockingListeners.forEach(listener => listener({ type: 'blocked', ...data }));
+    });
+
+    this.socket.on('youWereUnblocked', (data) => {
+      console.log('✅ You were unblocked by user:', data);
+      this.blockingListeners.forEach(listener => listener({ type: 'unblocked', ...data }));
+    });
+
+    this.socket.on('blockActionConfirmed', (data) => {
+      console.log('🔒 Block action confirmed:', data);
+      this.blockingListeners.forEach(listener => listener({ type: 'actionConfirmed', ...data }));
+    });
+
+    // Contact list refresh events
+    this.socket.on('refreshContactsList', (data) => {
+      console.log('🔄 Contact list refresh requested:', data);
+      this.contactListListeners.forEach(listener => listener(data));
+    });
+
+    // Notification events
+    this.socket.on('notification', (data) => {
+      console.log('🔔 Real-time notification received:', data);
+      this.notificationListeners.forEach(listener => listener(data));
+    });
+
+    // Account activity events
+    this.socket.on('userAccountDeleted', (data) => {
+      console.log('🗑️ User account deleted:', data);
+      this.accountActivityListeners.forEach(listener => listener({ type: 'accountDeleted', ...data }));
+    });
+
+    // Chat events
+    this.socket.on('chatDeleted', (data) => {
+      console.log('🗑️ Chat deleted:', data);
+      this.accountActivityListeners.forEach(listener => listener({ type: 'chatDeleted', ...data }));
+    });
+
+    // Message received event for sound notifications
+    this.socket.on('messageReceived', (data) => {
+      console.log('📬 Message received notification:', data);
+      this.notificationListeners.forEach(listener => listener({ type: 'messageReceived', ...data }));
+    });
+
+    // Message sent confirmation
+    this.socket.on('messageSent', (data) => {
+      console.log('✅ Message sent confirmation:', data);
+      this.notificationListeners.forEach(listener => listener({ type: 'messageSent', ...data }));
+    });
+
+    // Friend request events (additional ones)
+    this.socket.on('newFriendRequest', (data) => {
+      console.log('👥 New friend request:', data);
+      this.friendRequestListeners.forEach(listener => listener({ type: 'new', ...data }));
+    });
+
+    this.socket.on('friendRequestCancelled', (data) => {
+      console.log('❌ Friend request cancelled:', data);
+      this.friendRequestListeners.forEach(listener => listener({ type: 'cancelled', ...data }));
+    });
+
+    this.socket.on('friendRequestProcessed', (data) => {
+      console.log('✅ Friend request processed:', data);
+      this.friendRequestListeners.forEach(listener => listener({ type: 'processed', ...data }));
+    });
+  }
+
+  // Enhanced listener methods
+  onBlocking(callback) {
+    this.blockingListeners.add(callback);
+    return () => this.blockingListeners.delete(callback);
+  }
+
+  onNotification(callback) {
+    this.notificationListeners.add(callback);
+    return () => this.notificationListeners.delete(callback);
+  }
+
+  onContactListUpdate(callback) {
+    this.contactListListeners.add(callback);
+    return () => this.contactListListeners.delete(callback);
+  }
+
+  onAccountActivity(callback) {
+    this.accountActivityListeners.add(callback);
+    return () => this.accountActivityListeners.delete(callback);
+  }
+
+  // Enhanced emit methods
+  emitBlockUser(userId) {
+    if (this.socket && this.isConnected) {
+      console.log('🚫 Emitting block user:', userId);
+      this.socket.emit('blockUser', { userId });
+    }
+  }
+
+  emitUnblockUser(userId) {
+    if (this.socket && this.isConnected) {
+      console.log('✅ Emitting unblock user:', userId);
+      this.socket.emit('unblockUser', { userId });
+    }
+  }
+
+  // Request contact list refresh
+  requestContactListRefresh() {
+    if (this.socket && this.isConnected) {
+      console.log('🔄 Requesting contact list refresh');
+      this.socket.emit('requestContactsRefresh');
+    }
+  }
+
+  // Heartbeat to maintain connection
+  startHeartbeat() {
+    if (this.heartbeatInterval) {
+      clearInterval(this.heartbeatInterval);
+    }
+    
+    this.heartbeatInterval = setInterval(() => {
+      if (this.socket && this.isConnected) {
+        this.socket.emit('ping', { timestamp: Date.now() });
+      }
+    }, 30000); // Every 30 seconds
+  }
+
+  stopHeartbeat() {
+    if (this.heartbeatInterval) {
+      clearInterval(this.heartbeatInterval);
+      this.heartbeatInterval = null;
+    }
+  }
+
+  // Clean up all listeners
+  removeAllCustomListeners() {
+    this.messageListeners.clear();
+    this.onlineUsersListeners.clear();
+    this.connectionListeners.clear();
+    this.messagesReadListeners.clear();
+    this.typingListeners.clear();
+    this.friendRequestListeners.clear();
+    this.blockingListeners.clear();
+    this.notificationListeners.clear();
+    this.contactListListeners.clear();
+    this.accountActivityListeners.clear();
   }
 }
 

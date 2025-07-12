@@ -157,10 +157,10 @@ class SimpleNotificationService {
         return;
       }
 
-      // If user is in the same chat, just play confirm sound
+      // If user is in the same chat, don't play any sound for incoming messages
       if (this.currentChatUserId === message.senderId) {
-        console.log('🔔 User in same chat, playing confirm sound');
-        await this.playConfirmSound();
+        console.log('🔔 User in same chat, no notification sound');
+        // No sound for receiving messages in active chat
         return;
       }
 

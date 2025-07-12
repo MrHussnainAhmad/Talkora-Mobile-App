@@ -2,12 +2,14 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { View, Text, TouchableOpacity, FlatList, Image, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import ApiService from '../services/api';
 import SocketService from '../services/socket';
 import styles from '../assets/styles/friendsList.style';
 
 const FriendsList = ({ onFriendSelect, refreshTrigger }) => {
   const { user, loading: authLoading } = useAuth();
+  const { theme } = useTheme();
   const [friends, setFriends] = useState([]);
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -90,6 +92,29 @@ const FriendsList = ({ onFriendSelect, refreshTrigger }) => {
       }
     }
   }, [refreshTrigger, user?._id, fetchFriends]);
+
+  // Listen for friend request updates to refresh friends list immediately
+  useEffect(() => {
+    if (!user?._id) return;
+    
+    const unsubscribeFriendRequest = SocketService.onFriendRequest((data) => {
+      console.log('👥 Friend request event in FriendsList:', data);
+      
+      // If a friend request was accepted, refresh the friends list immediately
+      if (data.type === 'accepted' || data.type === 'listUpdated') {
+        console.log('🔄 Refreshing friends list due to friend request acceptance');
+        fetchFriends(false); // Refresh without showing refresh indicator
+      }
+      
+      // If profile was updated, also refresh to get updated profile info
+      if (data.type === 'profileUpdated') {
+        console.log('🔄 Refreshing friends list due to profile update');
+        fetchFriends(false);
+      }
+    });
+    
+    return unsubscribeFriendRequest;
+  }, [user?._id, fetchFriends]);
 
   // Set up real-time online users listener
   useEffect(() => {
@@ -274,28 +299,28 @@ const FriendsList = ({ onFriendSelect, refreshTrigger }) => {
   // Show loading while authentication is in progress
   if (authLoading || !user) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#1976D2" />
-        <Text style={styles.loadingText}>Loading...</Text>
+      <View style={[styles.loadingContainer, theme === 'dark' && styles.darkLoadingContainer]}>
+        <ActivityIndicator size="large" color={theme === 'dark' ? '#4CAF50' : '#1976D2'} />
+        <Text style={[styles.loadingText, theme === 'dark' && styles.darkLoadingText]}>Loading...</Text>
       </View>
     );
   }
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#1976D2" />
-        <Text style={styles.loadingText}>Loading friends...</Text>
+      <View style={[styles.loadingContainer, theme === 'dark' && styles.darkLoadingContainer]}>
+        <ActivityIndicator size="large" color={theme === 'dark' ? '#4CAF50' : '#1976D2'} />
+        <Text style={[styles.loadingText, theme === 'dark' && styles.darkLoadingText]}>Loading friends...</Text>
       </View>
     );
   }
 
   if (friends.length === 0) {
     return (
-      <View style={styles.emptyContainer}>
-        <Ionicons name="people-outline" size={64} color="#ccc" />
-        <Text style={styles.emptyText}>No friends yet</Text>
-        <Text style={styles.emptySubtext}>Add friends to start chatting</Text>
+      <View style={[styles.emptyContainer, theme === 'dark' && styles.darkEmptyContainer]}>
+        <Ionicons name="people-outline" size={64} color={theme === 'dark' ? '#666' : '#ccc'} />
+        <Text style={[styles.emptyText, theme === 'dark' && styles.darkEmptyText]}>No friends yet</Text>
+        <Text style={[styles.emptySubtext, theme === 'dark' && styles.darkEmptySubtext]}>Add friends to start chatting</Text>
       </View>
     );
   }

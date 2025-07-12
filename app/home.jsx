@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, Modal, TextInput, Animated } from "react-
 import { Ionicons } from "@expo/vector-icons";
 import styles from "../assets/styles/home.style";
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { router, useFocusEffect } from 'expo-router';
 import FriendsList from '../components/FriendsList';
 import SafeScreen from '../components/SafeScreen';
@@ -11,6 +12,7 @@ import SocketService from '../services/socket';
 
 export default function Home() {
   const { logout, user, loading } = useAuth();
+  const { theme } = useTheme();
   const [profileModalVisible, setProfileModalVisible] = useState(false);
   const [friendsModalVisible, setFriendsModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -193,15 +195,15 @@ const handleSettingsPress = useCallback(() => {
 
   return (
     <SafeScreen>
-      <View style={styles.container}>
+      <View style={[styles.container, theme === 'dark' && styles.darkContainer]}>
         {/* HEADER */}
-        <View style={styles.header}>
-          <Text style={styles.appName}>Talkora</Text>
+        <View style={[styles.header, theme === 'dark' && styles.darkHeader]}>
+          <Text style={[styles.appName, theme === 'dark' && styles.darkAppName]}>Talkora</Text>
           <TouchableOpacity
             style={styles.profileButton}
             onPress={handleProfilePress}
           >
-            <Ionicons name="person-circle-outline" size={30} color="#1976D2" />
+            <Ionicons name="person-circle-outline" size={30} color={theme === 'dark' ? '#4CAF50' : '#1976D2'} />
           </TouchableOpacity>
         </View>
 
@@ -354,31 +356,31 @@ const handleSettingsPress = useCallback(() => {
             activeOpacity={1}
             onPress={() => setProfileModalVisible(false)}
           >
-            <View style={styles.profileModal}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Account</Text>
+            <View style={[styles.profileModal, theme === 'dark' && styles.darkProfileModal]}>
+              <View style={[styles.modalHeader, theme === 'dark' && styles.darkModalHeader]}>
+                <Text style={[styles.modalTitle, theme === 'dark' && styles.darkModalTitle]}>Account</Text>
               </View>
-              <View style={styles.modalContent}>
+              <View style={[styles.modalContent, theme === 'dark' && styles.darkModalContent]}>
                 <TouchableOpacity
-                  style={styles.modalOption}
+                  style={[styles.modalOption, theme === 'dark' && styles.darkModalOption]}
                   onPress={handleProfileMenuPress}
                 >
                   <View style={styles.modalOptionIcon}>
-                    <Ionicons name="person-outline" size={20} color="#666" />
+                    <Ionicons name="person-outline" size={20} color={theme === 'dark' ? '#9BA1A6' : '#666'} />
                   </View>
-                  <Text style={styles.modalOptionText}>Profile</Text>
+                  <Text style={[styles.modalOptionText, theme === 'dark' && styles.darkModalOptionText]}>Profile</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={styles.modalOption}
+                  style={[styles.modalOption, theme === 'dark' && styles.darkModalOption]}
                   onPress={handleSettingsPress}
                 >
                   <View style={styles.modalOptionIcon}>
-                    <Ionicons name="settings-outline" size={20} color="#666" />
+                    <Ionicons name="settings-outline" size={20} color={theme === 'dark' ? '#9BA1A6' : '#666'} />
                   </View>
-                  <Text style={styles.modalOptionText}>Settings</Text>
+                  <Text style={[styles.modalOptionText, theme === 'dark' && styles.darkModalOptionText]}>Settings</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.modalOption, styles.modalOptionLast]}
+                  style={[styles.modalOption, styles.modalOptionLast, theme === 'dark' && styles.darkModalOption]}
                   onPress={handleLogout}
                 >
                   <View style={styles.modalOptionIcon}>

@@ -8,7 +8,9 @@ const ChatMenu = ({
   onClose, 
   onPrivacyPlus, 
   onDeleteFriend, 
-  friendName 
+  onBlockUnblock,
+  friendName,
+  isBlocked = false
 }) => {
   const handlePrivacyPlus = () => {
     Alert.alert(
@@ -52,6 +54,29 @@ const ChatMenu = ({
     );
   };
 
+  const handleBlockUnblock = () => {
+    Alert.alert(
+      isBlocked ? 'Unblock User' : `Block ${friendName}?`,
+      isBlocked 
+        ? `Are you sure you want to unblock ${friendName}? They will be able to send you messages again.`
+        : `Are you sure you want to block ${friendName}? They won't be able to send you messages or see when you're online.`,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: isBlocked ? 'Unblock' : 'Block',
+          style: 'destructive',
+          onPress: () => {
+            onBlockUnblock();
+            onClose();
+          },
+        },
+      ]
+    );
+  };
+
   return (
     <Modal
       animationType="fade"
@@ -71,6 +96,22 @@ const ChatMenu = ({
           >
             <Ionicons name="shield-outline" size={20} color="#1976D2" />
             <Text style={styles.menuItemText}>Privacy+</Text>
+          </TouchableOpacity>
+
+          <View style={styles.menuDivider} />
+
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={handleBlockUnblock}
+          >
+            <Ionicons 
+              name={isBlocked ? "unlock-outline" : "lock-closed-outline"} 
+              size={20} 
+              color={isBlocked ? "#4CAF50" : "#FF9800"} 
+            />
+            <Text style={[styles.menuItemText, { color: isBlocked ? "#4CAF50" : "#FF9800" }]}>
+              {isBlocked ? "Unblock" : "Block"} {friendName}
+            </Text>
           </TouchableOpacity>
 
           <View style={styles.menuDivider} />

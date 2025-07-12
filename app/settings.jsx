@@ -14,11 +14,13 @@ import { useAuth } from '../context/AuthContext';
 import notificationService from '../services/simpleNotificationService';
 import BackendSwitcher from '../utils/backendSwitcher';
 import BackendConfig from '../config/backend';
+import BlockingManager from '../components/BlockingManager';
 import styles from '../assets/styles/settings.style';
 
 export default function SettingsScreen() {
   const { theme, toggleTheme } = useTheme();
   const { user } = useAuth();
+  const [blockingManagerVisible, setBlockingManagerVisible] = React.useState(false);
 
   const handleBack = () => {
     router.back();
@@ -74,18 +76,24 @@ export default function SettingsScreen() {
   };
 
   const handleBackendSwitch = () => {
-    const currentBackend = BackendConfig.isProduction() ? 'Production' : 'Local';
-    Alert.alert(
-      'Switch Backend',
-      `Currently connected to: ${currentBackend}\n${BackendConfig.BASE_URL}`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Switch', 
-          onPress: () => BackendSwitcher.showSwitcher()
-        }
-      ]
-    );
+    BackendSwitcher.showSwitcher();
+  };
+  
+  const handleTestBackend = async () => {
+    await BackendSwitcher.testCurrentBackend();
+  };
+  
+  const getBackendStatus = () => {
+    if (BackendConfig.isLocal()) {
+      if (BackendConfig.BASE_URL.includes('localhost')) {
+        return 'Localhost';
+      }
+      return 'Local IP';
+    }
+    if (BackendConfig.isProduction()) {
+      return 'Production';
+    }
+    return 'Unknown';
   };
 
   return (
@@ -179,6 +187,34 @@ export default function SettingsScreen() {
               {user?.email || 'Unknown'}
             </Text>
           </View>
+        </View>
+
+        {/* Privacy & Security Section */}
+        <View style={[styles.section, theme === 'dark' && styles.darkSection]}>
+          <Text style={[styles.sectionTitle, theme === 'dark' && styles.darkSectionTitle]}>
+            Privacy & Security
+          </Text>
+          
+          <TouchableOpacity 
+            style={[styles.settingItem, styles.settingItemButton, theme === 'dark' && styles.darkSettingItem]}
+            onPress={() => setBlockingManagerVisible(true)}
+          >
+            <View style={styles.settingLeft}>
+              <Ionicons 
+                name="shield-outline" 
+                size={24} 
+                color={theme === 'dark' ? '#9BA1A6' : '#666'} 
+              />
+              <Text style={[styles.settingText, theme === 'dark' && styles.darkSettingText]}>
+                Blocked Users
+              </Text>
+            </View>
+            <Ionicons 
+              name="chevron-forward" 
+              size={20} 
+              color={theme === 'dark' ? '#9BA1A6' : '#999'} 
+            />
+          </TouchableOpacity>
         </View>
 
         {/* About Section */}
@@ -319,7 +355,7 @@ export default function SettingsScreen() {
               </View>
               <View style={styles.settingRight}>
                 <Text style={[styles.settingValue, theme === 'dark' && styles.darkSettingValue]}>
-                  {BackendConfig.isProduction() ? 'Production' : 'Local'}
+                  {getBackendStatus()}
                 </Text>
                 <Ionicons 
                   name="chevron-forward" 
@@ -343,6 +379,12 @@ export default function SettingsScreen() {
           )}
         </View>
       </ScrollView>
+
+      {/* Blocking Manager Modal */}
+      <BlockingManager 
+        visible={blockingManagerVisible}
+        onClose={() => setBlockingManagerVisible(false)}
+      />
     </View>
   );
 }

@@ -278,6 +278,99 @@ class ApiService {
       method: "DELETE",
     });
   }
+
+  // Blocking functionality
+  async blockUser(userId) {
+    return this.request(`/auth/block/${userId}`, {
+      method: "POST",
+    });
+  }
+
+  async unblockUser(userId) {
+    return this.request(`/auth/unblock/${userId}`, {
+      method: "POST",
+    });
+  }
+
+  async getBlockedUsers() {
+    return this.request("/auth/blocked-users");
+  }
+
+  async checkBlockStatus(userId) {
+    return this.request(`/auth/block-status/${userId}`);
+  }
+
+  // Last seen functionality
+  async getLastSeen(userId) {
+    return this.request(`/auth/last-seen/${userId}`);
+  }
+
+  // Message count functionality
+  async getMessageCount(userId) {
+    return this.request(`/messages/count/${userId}`);
+  }
+
+  // Friend profile with enhanced info
+  async getFriendProfile(friendId) {
+    return this.request(`/friends/profile/${friendId}`);
+  }
+
+  // Notification functionality
+  async registerFCMToken(token, platform, deviceId) {
+    return this.request("/notifications/fcm-token", {
+      method: "POST",
+      body: JSON.stringify({ token, platform, deviceId }),
+    });
+  }
+
+  async removeFCMToken(deviceId, token) {
+    return this.request("/notifications/fcm-token", {
+      method: "DELETE",
+      body: JSON.stringify({ deviceId, token }),
+    });
+  }
+
+  async getUnreadNotifications() {
+    return this.request("/notifications/unread");
+  }
+
+  async markNotificationAsRead(notificationId) {
+    return this.request(`/notifications/read/${notificationId}`, {
+      method: "PUT",
+    });
+  }
+
+  async clearAllNotifications() {
+    return this.request("/notifications/clear", {
+      method: "DELETE",
+    });
+  }
+
+  async testNotification(type, title, body, data) {
+    return this.request("/notifications/test", {
+      method: "POST",
+      body: JSON.stringify({ type, title, body, data }),
+    });
+  }
+
+  async getNotificationMetrics() {
+    return this.request("/notifications/metrics");
+  }
+
+  // Clear cache for specific endpoint
+  clearCache(endpoint) {
+    const keys = Array.from(this.cache.keys());
+    keys.forEach(key => {
+      if (key.includes(endpoint)) {
+        this.cache.delete(key);
+      }
+    });
+  }
+
+  // Clear all cache
+  clearAllCache() {
+    this.cache.clear();
+  }
 }
 
 export default new ApiService();

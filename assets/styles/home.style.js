@@ -190,6 +190,38 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  
+  // Dark Mode Styles
+  darkContainer: {
+    backgroundColor: '#121212',
+  },
+  darkHeader: {
+    backgroundColor: '#1E1E1E',
+    borderBottomColor: '#333333',
+  },
+  darkAppName: {
+    color: '#FFFFFF',
+  },
+  darkProfileModal: {
+    backgroundColor: '#2C2C2C',
+    borderColor: '#444444',
+  },
+  darkModalHeader: {
+    backgroundColor: '#2C2C2C',
+    borderBottomColor: '#444444',
+  },
+  darkModalTitle: {
+    color: '#FFFFFF',
+  },
+  darkModalContent: {
+    backgroundColor: '#2C2C2C',
+  },
+  darkModalOption: {
+    backgroundColor: '#2C2C2C',
+  },
+  darkModalOptionText: {
+    color: '#FFFFFF',
+  },
 });
 
 export default styles;
